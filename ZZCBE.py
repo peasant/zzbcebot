@@ -32,7 +32,8 @@ class callBackEvents():
     """ Callback Object for win32com
     """
 
-    # TODO 传递xmldata出去
+    # TODO 连接状态
+    # TODO 多线程
     def __init__(self, xmldata=''):
         xmldata = ''
 
@@ -50,7 +51,7 @@ class callBackEvents():
     def OnRecvData(self, data):
         """receive data"""
         self.xmldata = data
-        print("RECV :{}".format(data))
+        # print("RECV :{}".format(data))
 
 
 # market = win32com.client.Dispatch("TradeCOM.Market")
@@ -77,33 +78,38 @@ ret = trade.Execute(data)  # 指令发送成功
 time.sleep(0.2)
 recvData = trade.get_params(data)
 
-# TODO 解析XML
-print(recvData)
-
 if ret == 0:
     print()
 else:
     print('lasterror:', trade.LastError)
 
-    #
-    # from tkinter import *
-    # import time
-    #
-    #
-    # app=Tk()
-    # # ret = trade.Login(ZZBCE_ServerIp, ZZBCE_ServerPort, '018888027', 'trader', 60)
-    # if connectStatus==True:
-    #     status= '已连接'
-    # else:
-    #     status= '未连接'
-    #
-    # #time.sleep(2)
-    # cnctStatus=Label(app, text=status)
-    # cnctStatus.pack()
-    #
-    #
-    #
-    # #app.master.title('ZZBCE辅助程序')
-    # app.mainloop()
 
-trade.Logout()
+#解析XML，存入字典
+price=recvData.split('><')[1].strip('<').strip('/>').split(' ')[1:-1]
+dPrice={}
+for i in price:
+    l=i.split('=')
+    dPrice[l[0]]=l[1]
+print(dPrice)
+
+if __name__ == '__main__':
+
+    from tkinter import *
+    import time
+
+
+    app=Tk()
+    if connectStatus==True:
+        status= '已连接'
+    else:
+        status= '未连接'
+
+    cnctStatus=Label(app, text=status)
+    cnctStatus.pack()
+
+
+
+    app.title('ZZBCE辅助程序')
+    app.mainloop()
+
+    trade.Logout()
