@@ -25,6 +25,7 @@ connectStatus = 0
 data = ''
 errorId = 5566
 ret = 1  # 失败
+global recvData
 
 
 # eventobj=win32com.client.getevents("TradeCOM.Trade")
@@ -51,7 +52,7 @@ class callBackEvents():
     def OnRecvData(self, data):
         """receive data"""
         self.xmldata = data
-        # print("RECV :{}".format(data))
+        print("RECV :{}".format(data))
 
 
 # market = win32com.client.Dispatch("TradeCOM.Market")
@@ -85,31 +86,51 @@ else:
 
 
 #解析XML，存入字典
-price=recvData.split('><')[1].strip('<').strip('/>').split(' ')[1:-1]
-dPrice={}
-for i in price:
-    l=i.split('=')
-    dPrice[l[0]]=l[1]
-print(dPrice)
+# price=recvData.split('><')[1].strip('<').strip('/>').split(' ')[1:-1]
+# dPrice={}
+# for i in price:
+#     l=i.split('=')
+#     dPrice[l[0]]=l[1]
+# print(dPrice)
+# print(len(dPrice))
+def raw2Dict(data):
+    item = data.split('><')[1].strip('<').strip('/>').split(' ')[1:-1]
+    retDict={}
+    for i in item:
+        l=i.split('=')
+        retDict[l[0]]=l[1]
+    return(retDict)
 
-if __name__ == '__main__':
+dPrice=raw2Dict(recvData)
 
-    from tkinter import *
-    import time
+#窗口
+from tkinter import *
 
-
-    app=Tk()
-    if connectStatus==True:
-        status= '已连接'
-    else:
-        status= '未连接'
-
-    cnctStatus=Label(app, text=status)
-    cnctStatus.pack()
+class Application(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.master.geometry('800x600')
+        self.pack()
+        self.createWidgets()
 
 
+    def createWidgets(self):
+        self.safeRateLabel=Label(self, text= "安全率："+ self.showSafeRate().strip('\"'))
+        self.safeRateLabel.pack()
+        self.warename=Label(self, text='最新报价: '+dPrice['NewPrice'].strip('\"'))
+        self.warename.pack()
+        self.quitButton= Button(self, text="Quit", command= self.quit())
+        self.quitButton.pack()
 
-    app.title('ZZBCE辅助程序')
-    app.mainloop()
+    def showSafeRate(self):
+        trade.Execute('<Send ID="1004"/>')
+        time.sleep(0.2)
+        return raw2Dict(trade.get_params(data))['SaftRate']
 
-    trade.Logout()
+
+
+
+app= Application()
+app.master.title("ZZBCE辅助程序")
+app.mainloop()
+
